@@ -1,16 +1,25 @@
-import type { CollectionConfig } from 'payload'
+import type {CollectionConfig} from 'payload'
 
 export const Media: CollectionConfig = {
-  slug: 'media',
-  access: {
-    read: () => true,
-  },
-  fields: [
-    {
-      name: 'alt',
-      type: 'text',
-      required: true,
+    slug: 'media',
+    access: {
+        read: () => true,
     },
-  ],
-  upload: true,
+    fields: [
+        {
+            name: 'type',
+            type: 'select',
+            defaultValue: 'image',
+            options: [
+                {value: 'image', label: 'Image'},
+                {value: 'file', label: 'File'},
+            ],
+        },
+        {
+            name: 'alt',
+            type: 'text',
+            required: true,
+        },
+    ],
+    upload: true,
 }

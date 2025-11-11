@@ -67,16 +67,26 @@ export interface Config {
   };
   blocks: {};
   collections: {
+    pages: Page;
     users: User;
     media: Media;
+    'payload-kv': PayloadKv;
+    'payload-folders': FolderInterface;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
-  collectionsJoins: {};
+  collectionsJoins: {
+    'payload-folders': {
+      documentsAndFolders: 'payload-folders' | 'pages';
+    };
+  };
   collectionsSelect: {
+    pages: PagesSelect<false> | PagesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
+    'payload-folders': PayloadFoldersSelect<false> | PayloadFoldersSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -86,7 +96,7 @@ export interface Config {
   };
   globals: {};
   globalsSelect: {};
-  locale: null;
+  locale: 'sl' | 'en';
   user: User & {
     collection: 'users';
   };
@@ -115,6 +125,111 @@ export interface UserAuthOperations {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: string;
+  title: string;
+  sections?: SectionBlock[] | null;
+  folder?: (string | null) | FolderInterface;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SectionBlock".
+ */
+export interface SectionBlock {
+  content?:
+    | {
+        content?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'content';
+      }[]
+    | null;
+  status?: ('enabled' | 'disabled') | null;
+  anchor?: string | null;
+  background?: ('white' | 'lightGray' | 'darkGray' | 'darkBlue' | 'custom' | 'image') | null;
+  /**
+   * In HEX format (ie. #acacac)
+   */
+  customBgColor?: string | null;
+  backgroundImage?: (string | null) | Media;
+  width?: ('fullwidth' | 'wrap' | 'wrap-small' | 'wrap-xsmall') | null;
+  hasInnerContainer?: boolean | null;
+  innerWidth?: ('fullwidth' | 'wrap' | 'wrap-small' | 'wrap-xsmall') | null;
+  mobilePadding?: boolean | null;
+  hasPadding?: boolean | null;
+  hasTopPadding?: boolean | null;
+  hasBottomPadding?: boolean | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'section';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: string;
+  type?: ('image' | 'file') | null;
+  alt: string;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-folders".
+ */
+export interface FolderInterface {
+  id: string;
+  name: string;
+  folder?: (string | null) | FolderInterface;
+  documentsAndFolders?: {
+    docs?: (
+      | {
+          relationTo?: 'payload-folders';
+          value: string | FolderInterface;
+        }
+      | {
+          relationTo?: 'pages';
+          value: string | Page;
+        }
+    )[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  folderType?: 'pages'[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
@@ -139,22 +254,20 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
+ * via the `definition` "payload-kv".
  */
-export interface Media {
+export interface PayloadKv {
   id: string;
-  alt: string;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
+  key: string;
+  data:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -164,12 +277,20 @@ export interface PayloadLockedDocument {
   id: string;
   document?:
     | ({
+        relationTo: 'pages';
+        value: string | Page;
+      } | null)
+    | ({
         relationTo: 'users';
         value: string | User;
       } | null)
     | ({
         relationTo: 'media';
         value: string | Media;
+      } | null)
+    | ({
+        relationTo: 'payload-folders';
+        value: string | FolderInterface;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -215,6 +336,53 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages_select".
+ */
+export interface PagesSelect<T extends boolean = true> {
+  title?: T;
+  sections?:
+    | T
+    | {
+        section?: T | SectionBlockSelect<T>;
+      };
+  folder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SectionBlock_select".
+ */
+export interface SectionBlockSelect<T extends boolean = true> {
+  content?:
+    | T
+    | {
+        content?:
+          | T
+          | {
+              content?: T;
+              id?: T;
+              blockName?: T;
+            };
+      };
+  status?: T;
+  anchor?: T;
+  background?: T;
+  customBgColor?: T;
+  backgroundImage?: T;
+  width?: T;
+  hasInnerContainer?: T;
+  innerWidth?: T;
+  mobilePadding?: T;
+  hasPadding?: T;
+  hasTopPadding?: T;
+  hasBottomPadding?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
@@ -240,6 +408,7 @@ export interface UsersSelect<T extends boolean = true> {
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
+  type?: T;
   alt?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -252,6 +421,26 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-kv_select".
+ */
+export interface PayloadKvSelect<T extends boolean = true> {
+  key?: T;
+  data?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-folders_select".
+ */
+export interface PayloadFoldersSelect<T extends boolean = true> {
+  name?: T;
+  folder?: T;
+  documentsAndFolders?: T;
+  folderType?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -284,6 +473,109 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "Warning".
+ */
+export interface Warning {
+  type?: ('notice' | 'info' | 'success' | 'warning' | 'alert') | null;
+  heading: string;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'warning';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SpacerBlock".
+ */
+export interface SpacerBlock {
+  size?: ('sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'spacer';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ButtonBlock".
+ */
+export interface ButtonBlock {
+  link: {
+    type?: ('custom' | 'reference') | null;
+    newTab?: boolean | null;
+    reference?: {
+      relationTo: 'pages';
+      value: string | Page;
+    } | null;
+    url?: string | null;
+    label: string;
+    /**
+     * Choose how the button should be rendered.
+     */
+    appearance?: ('primary' | 'secondary' | 'outline' | 'link') | null;
+    /**
+     * Choose button size.
+     */
+    size?: ('large' | 'small') | null;
+    triggerEvent?: boolean | null;
+    eventName?: string | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'button';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "AccordionBlock".
+ */
+export interface AccordionBlock {
+  'accordion-items': {
+    title: string;
+    content: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    };
+    id?: string | null;
+  }[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'accordion';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DownloadBlock".
+ */
+export interface DownloadBlock {
+  download: (string | Media)[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'download';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
