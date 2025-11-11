@@ -131,6 +131,7 @@ export interface Page {
   id: string;
   title: string;
   sections?: SectionBlock[] | null;
+  downloads?: (string | Media)[] | null;
   folder?: (string | null) | FolderInterface;
   updatedAt: string;
   createdAt: string;
@@ -142,26 +143,29 @@ export interface Page {
  */
 export interface SectionBlock {
   content?:
-    | {
-        content?: {
-          root: {
-            type: string;
-            children: {
-              type: any;
-              version: number;
+    | (
+        | {
+            content?: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
               [k: string]: unknown;
-            }[];
-            direction: ('ltr' | 'rtl') | null;
-            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-            indent: number;
-            version: number;
-          };
-          [k: string]: unknown;
-        } | null;
-        id?: string | null;
-        blockName?: string | null;
-        blockType: 'content';
-      }[]
+            } | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'content';
+          }
+        | DownloadBlock
+      )[]
     | null;
   status?: ('enabled' | 'disabled') | null;
   anchor?: string | null;
@@ -181,6 +185,16 @@ export interface SectionBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'section';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DownloadBlock".
+ */
+export interface DownloadBlock {
+  download: (string | Media)[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'download';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -345,6 +359,7 @@ export interface PagesSelect<T extends boolean = true> {
     | {
         section?: T | SectionBlockSelect<T>;
       };
+  downloads?: T;
   folder?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -365,6 +380,7 @@ export interface SectionBlockSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+        download?: T | DownloadBlockSelect<T>;
       };
   status?: T;
   anchor?: T;
@@ -378,6 +394,15 @@ export interface SectionBlockSelect<T extends boolean = true> {
   hasPadding?: T;
   hasTopPadding?: T;
   hasBottomPadding?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DownloadBlock_select".
+ */
+export interface DownloadBlockSelect<T extends boolean = true> {
+  download?: T;
   id?: T;
   blockName?: T;
 }
@@ -566,16 +591,6 @@ export interface AccordionBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'accordion';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "DownloadBlock".
- */
-export interface DownloadBlock {
-  download: (string | Media)[];
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'download';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

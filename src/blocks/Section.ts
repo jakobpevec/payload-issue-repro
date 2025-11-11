@@ -1,5 +1,6 @@
 import type { Block } from 'payload'
 import {Content} from "@/blocks/Content";
+import {Download} from "@/blocks/Download";
 
 export const Section: Block = {
     slug: 'section',
@@ -31,7 +32,7 @@ export const Section: Block = {
                                 sl: 'Vsebina',
                                 en: 'Content',
                             },
-                            blocks: [Content],
+                            blocks: [Content,Download],
                         },
                     ],
                 },

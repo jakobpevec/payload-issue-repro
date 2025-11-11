@@ -23,6 +23,13 @@ export const Pages: CollectionConfig = {
             name: 'sections',
             type: 'blocks',
             blocks: [Section]
-        }
+        },
+        {
+            name: 'downloads',
+            type: 'upload',
+            relationTo: 'media',
+            hasMany: true,
+            required: false
+        },
     ],
 }
